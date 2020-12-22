@@ -1,13 +1,12 @@
-from typing import List
-
-from selenium import webdriver
+import argparse
+import hashlib
+import json
 import sys
 import time
 from random import seed, randint
-import hashlib
-import json
-import argparse
+from typing import List
 
+from selenium import webdriver
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement
 
