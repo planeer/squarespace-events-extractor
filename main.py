@@ -142,7 +142,7 @@ def crawl_squarespace_events(site_name: str, events_name: str = "Events", output
                         driver.switch_to.default_content()
                     else:
                         random_wait(lower_limit=2, upper_limit=5)
-    except KeyboardInterrupt:
+    finally:
         with open(output_file, "w") as write_file:
             json.dump(events, write_file)
 
