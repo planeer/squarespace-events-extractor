@@ -1,9 +1,58 @@
 import argparse
 import sys
 
+import requests
+from bs4 import BeautifulSoup
+
 
 def parse_square_space_blogs(site_url: str, output_file: str = "blogs.json", verbose: bool = False):
-    print("TODO")
+    if verbose:
+        print(f"Getting site {site_url}")
+
+    site = BeautifulSoup(requests.get(site_url).text, "html.parser")
+
+    # Pages are broken up into sections with blogs
+    sections = site.find(id="content").find_all(class_="sqs-gallery-design-list")
+    if verbose:
+        print()
+        print(f"Need to parse {len(sections)} sections")
+
+    parsed_blogs = []
+
+    for index, sections in enumerate(sections):
+        blogs = sections.find_all(class_="summary-item")
+
+        if verbose:
+            print()
+            print(f"Parsing {index+1} section ({len(blogs)} blogs)")
+
+        for blog in blogs:
+            parsed_blog = {}
+
+            blog_preview = blog.find(class_="summary-content")
+
+            title = blog_preview.find(class_="summary-title").text.strip()
+            parsed_blog["title"] = title
+
+            date_element = blog_preview.find(class_="summary-metadata-item--date")
+            date = ""
+            if date_element is not None:
+                date = date_element.text.strip()
+            parsed_blog["date"] = date
+
+            if verbose:
+                print(f"-> Parsing blog: {title} | {date}")
+
+            excerpt_element = blog_preview.find(class_="summary-excerpt")
+            excerpt = ""
+            if excerpt_element is not None:
+                excerpt = excerpt_element.text.strip()
+            parsed_blog["summary"] = excerpt
+
+            featured_image = blog.find(class_="summary-thumbnail").find("img")["data-src"]
+            parsed_blog["featured_image"] = featured_image
+
+            parsed_blogs.append(parsed_blog)
 
 
 def main():
