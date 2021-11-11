@@ -153,7 +153,7 @@ def main():
     parser = argparse.ArgumentParser("Extract squarespace events into json")
     parser.add_argument("-o", "--output", type=str, default="events.json", help="Output json file for events")
     parser.add_argument("-p", "--parsed_events", type=str,
-                        help="Events that were already parsed, so they can be skipped in current parsing")
+                        help="Json file with events that were already parsed so they can be skipped in current parsing")
     parser.add_argument("-v", "--verbose", action="store_true", help="Logging")
     parser.add_argument("-s", "--site", type=str, required=True, help="Site name, so that it can be found on dashboard")
     parser.add_argument("-e", "--events_name", type=str, default="Events",
