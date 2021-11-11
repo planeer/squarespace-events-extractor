@@ -1,20 +1,34 @@
 import argparse
 import json
 import sys
+from enum import Enum
 
 import requests
 from bs4 import BeautifulSoup
 
 
+class BlogType(Enum):
+    NORMAL = "normal"
+    PHOTO = "photo"
+
+    # Needed for input in argparse
+    def __str__(self):
+        return self.value
+
+
 def parse_square_space_blogs(site_url: str, blog_subpage: str, output_file: str = "blogs.json", blogs_file: str = None,
-                             verbose: bool = False):
+                             blog_type: BlogType = BlogType.NORMAL, verbose: bool = False):
     if verbose:
         print(f"Getting site {site_url}{blog_subpage}")
 
     site = BeautifulSoup(requests.get(f"{site_url}{blog_subpage}").text, "html.parser")
 
     # Pages are broken up into sections with blogs
-    sections = site.find(id="content").find_all(class_="sqs-gallery-design-list")
+    if blog_type == BlogType.PHOTO:
+        sections = site.find_all(class_="summary-item-list-container")
+    else:
+        sections = site.find(id="content").find_all(class_="sqs-gallery-design-list")
+
     if verbose:
         print()
         print(f"Need to parse {len(sections)} sections")
@@ -78,7 +92,10 @@ def parse_square_space_blogs(site_url: str, blog_subpage: str, output_file: str 
                         # Remove images from content html, because they need to be inserted manually later. We need to
                         # go so many parents above, because otherwise we leave the button "view full size" that belongs
                         # to the image
-                        image.parent.parent.parent.decompose()
+                        if blog_type == BlogType.PHOTO:
+                            image.parent.decompose()
+                        else:
+                            image.parent.parent.parent.decompose()
 
                     parsed_blog["images"] = images_urls
                     parsed_blog["content"] = str(blog_content)
@@ -96,12 +113,14 @@ def main():
     parser.add_argument("-b", "--blog", type=str, required=True, help="Site subpage, so complete link is [SITE][BLOG]")
     parser.add_argument("-v", "--verbose", action="store_true", help="Logging")
     parser.add_argument("-p", "--parsed_blogs", type=str,
-                        help="Blogs that were already parsed, so they can be skipped in current parsing")
+                        help="Json file with blogs that were already parsed so they can be skipped in current parsing")
+    parser.add_argument("-t", "--type", type=BlogType, default=BlogType.NORMAL, choices=BlogType,
+                        help="Type of site configuration")
 
     args = parser.parse_args()
 
     parse_square_space_blogs(site_url=args.site, blog_subpage=args.blog, output_file=args.output,
-                             blogs_file=args.parsed_blogs, verbose=args.verbose)
+                             blogs_file=args.parsed_blogs, blog_type=args.type, verbose=args.verbose)
 
 
 if __name__ == "__main__":
